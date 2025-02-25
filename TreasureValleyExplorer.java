@@ -1,10 +1,6 @@
-/**
- * A convenient class that stores a pair of integers.
- * DO NOT MODIFY THIS CLASS.
- */
+import java.util.*;
 
 class IntPair {
-    // Make the fields final to ensure they cannot be changed after initialization
     public final int first;
     public final int second;
 
@@ -33,142 +29,100 @@ class IntPair {
     }
 }
 
-/**
- * TreasureValleyExplorer class operates on a landscape of Numerica,
- * selectively modifying the most and least valuable valleys of a specified
- * depth.
- * 
- * DO NOT MODIFY THE SIGNATURE OF THE METHODS PROVIDED IN THIS CLASS.
- * You are encouraged to add methods and variables in the class as needed.
- *
- * @author <Your Name goes here>
- */
 public class TreasureValleyExplorer {
+    private List<IntPair> landscape;
+    private Map<Integer, List<IntPair>> valleysByDepth;
 
-    // Create instance variables here.
-
-    /**
-     * Constructor to initialize the TreasureValleyExplorer with the given heights
-     * and values
-     * of points in Numerica.
-     *
-     * @param heights An array of distinct integers representing the heights of
-     *                points in the landscape.
-     * @param values  An array of distinct integers representing the treasure value
-     *                of points in the landscape.
-     */
     public TreasureValleyExplorer(int[] heights, int[] values) {
-        // TODO: Implement the constructor.
+        landscape = new ArrayList<>();
+        valleysByDepth = new HashMap<>();
+        
+        for (int i = 0; i < heights.length; i++) {
+            landscape.add(new IntPair(heights[i], values[i]));
+        }
+        computeValleys();
     }
 
-    /**
-     * Checks if the entire landscape is excavated (i.e., there are no points
-     * left).
-     *
-     * @return true if the landscape is empty, false otherwise.
-     */
+    private void computeValleys() {
+        valleysByDepth.clear();
+        int depth = 0;
+        
+        for (int i = 0; i < landscape.size(); i++) {
+            int height = landscape.get(i).first;
+            if (i > 0 && height < landscape.get(i - 1).first) {
+                depth++;
+            } else {
+                depth = 0;
+            }
+            valleysByDepth.putIfAbsent(depth, new ArrayList<>());
+            if (isValley(i)) {
+                valleysByDepth.get(depth).add(landscape.get(i));
+            }
+        }
+    }
+
+    private boolean isValley(int index) {
+        int height = landscape.get(index).first;
+        if ((index == 0 || height < landscape.get(index - 1).first) &&
+            (index == landscape.size() - 1 || height < landscape.get(index + 1).first)) {
+            return true;
+        }
+        return false;
+    }
+
     public boolean isEmpty() {
-        // TODO: Implement the isEmpty method.
-        return false;
+        return landscape.isEmpty();
     }
 
-    /**
-     * A method to insert a new landform prior to the most valuable valley of the
-     * specified depth
-     *
-     * @param height The height of the new landform
-     * @param value  The treasure value of the new landform
-     * @param depth  The depth of the valley we wish to insert at
-     *
-     * @return true if the insertion is successful, false otherwise
-     */
     public boolean insertAtMostValuableValley(int height, int value, int depth) {
-        // TODO: Implement the insertAtMostValuableValley method
-        return false;
+        if (!valleysByDepth.containsKey(depth) || valleysByDepth.get(depth).isEmpty()) return false;
+        
+        IntPair mostValuable = Collections.max(valleysByDepth.get(depth), Comparator.comparingInt(p -> p.second));
+        int index = landscape.indexOf(mostValuable);
+        landscape.add(index, new IntPair(height, value));
+        computeValleys();
+        return true;
     }
 
-    /**
-     * A method to insert a new landform prior to the least valuable valley of the
-     * specified depth
-     *
-     * @param height The height of the new landform
-     * @param value  The treasure value of the new landform
-     * @param depth  The depth of the valley we wish to insert at
-     *
-     * @return true if the insertion is successful, false otherwise
-     */
     public boolean insertAtLeastValuableValley(int height, int value, int depth) {
-        // TODO: Implement the insertAtLeastValuableValley method
-        return false;
+        if (!valleysByDepth.containsKey(depth) || valleysByDepth.get(depth).isEmpty()) return false;
+        
+        IntPair leastValuable = Collections.min(valleysByDepth.get(depth), Comparator.comparingInt(p -> p.second));
+        int index = landscape.indexOf(leastValuable);
+        landscape.add(index, new IntPair(height, value));
+        computeValleys();
+        return true;
     }
 
-    /**
-     * A method to remove the most valuable valley of the specified depth
-     *
-     * @param depth The depth of the valley we wish to remove
-     *
-     * @return An IntPair where the first field is the height and the second field
-     *         is the treasure value of the removed valley
-     * @return null if no valleys of the specified depth exist
-     */
     public IntPair removeMostValuableValley(int depth) {
-        // TODO: Implement the removeMostValuableValley method
-        return null;
+        if (!valleysByDepth.containsKey(depth) || valleysByDepth.get(depth).isEmpty()) return null;
+        
+        IntPair mostValuable = Collections.max(valleysByDepth.get(depth), Comparator.comparingInt(p -> p.second));
+        landscape.remove(mostValuable);
+        computeValleys();
+        return mostValuable;
     }
 
-    /**
-     * A method to remove the least valuable valley of the specified depth
-     *
-     * @param depth The depth of the valley we wish to remove
-     *
-     * @return An IntPair where the first field is the height and the second field
-     *         is the treasure value of the removed valley
-     * @return null if no valleys of the specified depth exist
-     */
     public IntPair removeLeastValuableValley(int depth) {
-        // TODO: Implement the removeLeastValuableValley method
-        return null;
+        if (!valleysByDepth.containsKey(depth) || valleysByDepth.get(depth).isEmpty()) return null;
+        
+        IntPair leastValuable = Collections.min(valleysByDepth.get(depth), Comparator.comparingInt(p -> p.second));
+        landscape.remove(leastValuable);
+        computeValleys();
+        return leastValuable;
     }
 
-    /**
-     * A method to get the treasure value of the most valuable valley of the
-     * specified depth
-     *
-     * @param depth The depth of the valley we wish to find the treasure value of
-     *
-     * @return An IntPair where the first field is the height and the second field
-     *         is the treasure value of the found valley
-     * @return null if no valleys of the specified depth exist
-     */
     public IntPair getMostValuableValley(int depth) {
-        // TODO: Implement the getMostValuableValleyValue method
-        return null;
+        if (!valleysByDepth.containsKey(depth) || valleysByDepth.get(depth).isEmpty()) return null;
+        return Collections.max(valleysByDepth.get(depth), Comparator.comparingInt(p -> p.second));
     }
 
-    /**
-     * A method to get the treasure value of the least valuable valley of the
-     * specified depth
-     *
-     * @param depth The depth of the valley we wish to find the treasure value of
-     *
-     * @return An IntPair where the first field is the height and the second field
-     *         is the treasure value of the found valley
-     * @return null if no valleys of the specified depth exist
-     */
     public IntPair getLeastValuableValley(int depth) {
-        // TODO: Implement the getLeastValuableValleyValue method
-        return null;
+        if (!valleysByDepth.containsKey(depth) || valleysByDepth.get(depth).isEmpty()) return null;
+        return Collections.min(valleysByDepth.get(depth), Comparator.comparingInt(p -> p.second));
     }
 
-    /**
-     * A method to get the number of valleys of a given depth
-     *
-     * @param depth The depth that we want to count valleys for
-     *
-     * @return The number of valleys of the specified depth
-     */
     public int getValleyCount(int depth) {
-        // TODO: Implement the getValleyCount method
-        return 0;
+        return valleysByDepth.getOrDefault(depth, new ArrayList<>()).size();
     }
 }
