@@ -1,3 +1,5 @@
+import java.util.*;
+
 class IntPair {
     public final int first;
     public final int second;
@@ -13,10 +15,8 @@ class IntPair {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null || getClass() != obj.getClass())
-            return false;
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
         IntPair other = (IntPair) obj;
         return first == other.first && second == other.second;
     }
@@ -28,197 +28,115 @@ class IntPair {
 }
 
 public class TreasureValleyExplorer {
-    private int[] heights;
-    private int[] values;
-    private int size;
+    private List<Integer> heights;
+    private List<Integer> values;
+    private TreeMap<Integer, TreeMap<Integer, Integer>> valleysByDepth; // Depth -> (Value -> Height)
+    private TreeMap<Integer, Integer> depths; // Index -> Depth
 
     public TreasureValleyExplorer(int[] heights, int[] values) {
-        this.heights = heights.clone();
-        this.values = values.clone();
-        this.size = heights.length;
+        this.heights = new ArrayList<>();
+        this.values = new ArrayList<>();
+        this.valleysByDepth = new TreeMap<>();
+        this.depths = new TreeMap<>();
+        
+        for (int i = 0; i < heights.length; i++) {
+            this.heights.add(heights[i]);
+            this.values.add(values[i]);
+        }
+        computeDepths();
     }
 
-    public boolean isEmpty() {
-        return size == 0;
-    }
-
-    private int calculateDepth(int index) {
-        if (index == 0) return 0;
+    private void computeDepths() {
+        depths.clear();
+        valleysByDepth.clear();
+        if (heights.isEmpty()) return;
+        
+        int n = heights.size();
         int depth = 0;
-        for (int i = index; i > 0; i--) {
-            if (heights[i] < heights[i - 1]) {
-                depth++;
+        
+        for (int i = 0; i < n; i++) {
+            if (i == 0 || heights.get(i) > heights.get(i - 1)) {
+                depth = 0;
             } else {
-                break;
+                depth++;
+            }
+            depths.put(i, depth);
+            if (isValley(i)) {
+                valleysByDepth.putIfAbsent(depth, new TreeMap<>());
+                valleysByDepth.get(depth).put(values.get(i), heights.get(i));
             }
         }
-        return depth;
     }
-
-    private boolean isValley(int index) {
-        if (size == 1) return true;
-        if (index == 0) return heights[index] < heights[index + 1];
-        if (index == size - 1) return heights[index] < heights[index - 1];
-        return heights[index] < heights[index - 1] && heights[index] < heights[index + 1];
+    
+    private boolean isValley(int i) {
+        int n = heights.size();
+        if (n == 1) return true;
+        if (i == 0) return heights.get(i) < heights.get(i + 1);
+        if (i == n - 1) return heights.get(i) < heights.get(i - 1);
+        return heights.get(i) < heights.get(i - 1) && heights.get(i) < heights.get(i + 1);
+    }
+    
+    public boolean isEmpty() {
+        return heights.isEmpty();
     }
 
     public boolean insertAtMostValuableValley(int height, int value, int depth) {
-        int maxValue = Integer.MIN_VALUE;
-        int insertIndex = -1;
-
-        for (int i = 0; i < size; i++) {
-            if (calculateDepth(i) == depth && isValley(i) && values[i] > maxValue) {
-                maxValue = values[i];
-                insertIndex = i;
-            }
-        }
-
-        if (insertIndex == -1) return false;
-
-        int[] newHeights = new int[size + 1];
-        int[] newValues = new int[size + 1];
-
-        System.arraycopy(heights, 0, newHeights, 0, insertIndex);
-        System.arraycopy(values, 0, newValues, 0, insertIndex);
-
-        newHeights[insertIndex] = height;
-        newValues[insertIndex] = value;
-
-        System.arraycopy(heights, insertIndex, newHeights, insertIndex + 1, size - insertIndex);
-        System.arraycopy(values, insertIndex, newValues, insertIndex + 1, size - insertIndex);
-
-        heights = newHeights;
-        values = newValues;
-        size++;
+        if (!valleysByDepth.containsKey(depth)) return false;
+        int maxValue = valleysByDepth.get(depth).lastKey();
+        int idx = values.indexOf(maxValue);
+        heights.add(idx, height);
+        values.add(idx, value);
+        computeDepths();
         return true;
     }
 
     public boolean insertAtLeastValuableValley(int height, int value, int depth) {
-        int minValue = Integer.MAX_VALUE;
-        int insertIndex = -1;
-
-        for (int i = 0; i < size; i++) {
-            if (calculateDepth(i) == depth && isValley(i) && values[i] < minValue) {
-                minValue = values[i];
-                insertIndex = i;
-            }
-        }
-
-        if (insertIndex == -1) return false;
-
-        int[] newHeights = new int[size + 1];
-        int[] newValues = new int[size + 1];
-
-        System.arraycopy(heights, 0, newHeights, 0, insertIndex);
-        System.arraycopy(values, 0, newValues, 0, insertIndex);
-
-        newHeights[insertIndex] = height;
-        newValues[insertIndex] = value;
-
-        System.arraycopy(heights, insertIndex, newHeights, insertIndex + 1, size - insertIndex);
-        System.arraycopy(values, insertIndex, newValues, insertIndex + 1, size - insertIndex);
-
-        heights = newHeights;
-        values = newValues;
-        size++;
+        if (!valleysByDepth.containsKey(depth)) return false;
+        int minValue = valleysByDepth.get(depth).firstKey();
+        int idx = values.indexOf(minValue);
+        heights.add(idx, height);
+        values.add(idx, value);
+        computeDepths();
         return true;
     }
 
     public IntPair removeMostValuableValley(int depth) {
-        int maxValue = Integer.MIN_VALUE;
-        int removeIndex = -1;
-
-        for (int i = 0; i < size; i++) {
-            if (calculateDepth(i) == depth && isValley(i) && values[i] > maxValue) {
-                maxValue = values[i];
-                removeIndex = i;
-            }
-        }
-
-        if (removeIndex == -1) return null;
-
-        IntPair removed = new IntPair(heights[removeIndex], values[removeIndex]);
-
-        int[] newHeights = new int[size - 1];
-        int[] newValues = new int[size - 1];
-
-        System.arraycopy(heights, 0, newHeights, 0, removeIndex);
-        System.arraycopy(values, 0, newValues, 0, removeIndex);
-
-        System.arraycopy(heights, removeIndex + 1, newHeights, removeIndex, size - removeIndex - 1);
-        System.arraycopy(values, removeIndex + 1, newValues, removeIndex, size - removeIndex - 1);
-
-        heights = newHeights;
-        values = newValues;
-        size--;
+        if (!valleysByDepth.containsKey(depth)) return null;
+        int maxValue = valleysByDepth.get(depth).lastKey();
+        int idx = values.indexOf(maxValue);
+        IntPair removed = new IntPair(heights.get(idx), values.get(idx));
+        heights.remove(idx);
+        values.remove(idx);
+        computeDepths();
         return removed;
     }
 
     public IntPair removeLeastValuableValley(int depth) {
-        int minValue = Integer.MAX_VALUE;
-        int removeIndex = -1;
-
-        for (int i = 0; i < size; i++) {
-            if (calculateDepth(i) == depth && isValley(i) && values[i] < minValue) {
-                minValue = values[i];
-                removeIndex = i;
-            }
-        }
-
-        if (removeIndex == -1) return null;
-
-        IntPair removed = new IntPair(heights[removeIndex], values[removeIndex]);
-
-        int[] newHeights = new int[size - 1];
-        int[] newValues = new int[size - 1];
-
-        System.arraycopy(heights, 0, newHeights, 0, removeIndex);
-        System.arraycopy(values, 0, newValues, 0, removeIndex);
-
-        System.arraycopy(heights, removeIndex + 1, newHeights, removeIndex, size - removeIndex - 1);
-        System.arraycopy(values, removeIndex + 1, newValues, removeIndex, size - removeIndex - 1);
-
-        heights = newHeights;
-        values = newValues;
-        size--;
+        if (!valleysByDepth.containsKey(depth)) return null;
+        int minValue = valleysByDepth.get(depth).firstKey();
+        int idx = values.indexOf(minValue);
+        IntPair removed = new IntPair(heights.get(idx), values.get(idx));
+        heights.remove(idx);
+        values.remove(idx);
+        computeDepths();
         return removed;
     }
 
     public IntPair getMostValuableValley(int depth) {
-        int maxValue = Integer.MIN_VALUE;
-        IntPair result = null;
-
-        for (int i = 0; i < size; i++) {
-            if (calculateDepth(i) == depth && isValley(i) && values[i] > maxValue) {
-                maxValue = values[i];
-                result = new IntPair(heights[i], values[i]);
-            }
-        }
-
-        return result;
+        if (!valleysByDepth.containsKey(depth)) return null;
+        int maxValue = valleysByDepth.get(depth).lastKey();
+        int height = valleysByDepth.get(depth).get(maxValue);
+        return new IntPair(height, maxValue);
     }
 
     public IntPair getLeastValuableValley(int depth) {
-        int minValue = Integer.MAX_VALUE;
-        IntPair result = null;
-
-        for (int i = 0; i < size; i++) {
-            if (calculateDepth(i) == depth && isValley(i) && values[i] < minValue) {
-                minValue = values[i];
-                result = new IntPair(heights[i], values[i]);
-            }
-        }
-
-        return result;
+        if (!valleysByDepth.containsKey(depth)) return null;
+        int minValue = valleysByDepth.get(depth).firstKey();
+        int height = valleysByDepth.get(depth).get(minValue);
+        return new IntPair(height, minValue);
     }
 
     public int getValleyCount(int depth) {
-        int count = 0;
-        for (int i = 0; i < size; i++) {
-            if (calculateDepth(i) == depth && isValley(i)) {
-                count++;
-            }
-        }
-        return count;
+        return valleysByDepth.getOrDefault(depth, new TreeMap<>()).size();
     }
 }
