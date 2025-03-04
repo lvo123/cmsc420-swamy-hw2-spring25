@@ -1,6 +1,11 @@
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-class IntPair implements Comparable<IntPair> {
+/**
+ * A convenient class that stores a pair of integers.
+ * DO NOT MODIFY THIS CLASS.
+ */
+class IntPair {
     public final int first;
     public final int second;
 
@@ -26,13 +31,12 @@ class IntPair implements Comparable<IntPair> {
     public int hashCode() {
         return 31 * first + second;
     }
-
-    @Override
-    public int compareTo(IntPair o) {
-        return Integer.compare(this.first, o.first);
-    }
 }
 
+/**
+ * TreasureValleyExplorer class operates on a landscape of Numerica,
+ * selectively modifying the most and least valuable valleys of a specified depth.
+ */
 public class TreasureValleyExplorer {
     private List<Integer> heights;
     private List<Integer> values;
@@ -51,7 +55,6 @@ public class TreasureValleyExplorer {
     }
 
     private int calculateDepth(int index) {
-        if (index == 0) return 0;
         int depth = 0;
         while (index > 0 && heights.get(index) < heights.get(index - 1)) {
             depth++;
@@ -83,44 +86,52 @@ public class TreasureValleyExplorer {
         return targetIndex;
     }
 
-    public IntPair getMostValuableValley(int depth) {
-        int index = findValleyIndex(depth, true);
-        return index == -1 ? null : new IntPair(heights.get(index), values.get(index));
-    }
+    private boolean insertAtValley(int height, int value, int depth, boolean findMax) {
+        int index = findValleyIndex(depth, findMax);
+        if (index == -1) return false;
 
-    public IntPair getLeastValuableValley(int depth) {
-        int index = findValleyIndex(depth, false);
-        return index == -1 ? null : new IntPair(heights.get(index), values.get(index));
+        heights.add(index, height);
+        values.add(index, value);
+        return true;
     }
 
     public boolean insertAtMostValuableValley(int height, int value, int depth) {
-        int index = findValleyIndex(depth, true);
-        if (index == -1) return false;
-        heights.add(index, height);
-        values.add(index, value);
-        return true;
+        return insertAtValley(height, value, depth, true);
     }
 
     public boolean insertAtLeastValuableValley(int height, int value, int depth) {
-        int index = findValleyIndex(depth, false);
-        if (index == -1) return false;
-        heights.add(index, height);
-        values.add(index, value);
-        return true;
+        return insertAtValley(height, value, depth, false);
+    }
+
+    private IntPair removeValley(int depth, boolean findMax) {
+        int index = findValleyIndex(depth, findMax);
+        if (index == -1) return null;
+
+        IntPair removed = new IntPair(heights.get(index), values.get(index));
+        heights.remove(index);
+        values.remove(index);
+        return removed;
     }
 
     public IntPair removeMostValuableValley(int depth) {
-        int index = findValleyIndex(depth, true);
-        if (index == -1) return null;
-        IntPair removed = new IntPair(heights.remove(index), values.remove(index));
-        return removed;
+        return removeValley(depth, true);
     }
 
     public IntPair removeLeastValuableValley(int depth) {
-        int index = findValleyIndex(depth, false);
-        if (index == -1) return null;
-        IntPair removed = new IntPair(heights.remove(index), values.remove(index));
-        return removed;
+        return removeValley(depth, false);
+    }
+
+    private IntPair getValuableValley(int depth, boolean findMax) {
+        int index = findValleyIndex(depth, findMax);
+        return index == -1 ? null : new IntPair(heights.get(index), values.get(index));
+    }
+
+    public IntPair getMostValuableValley(int depth) {
+        return getValuableValley(depth, true);
+    }
+
+    public IntPair getLeastValuableValley(int depth) {
+        return getValuableValley(depth, false);
     }
 
     public int getValleyCount(int depth) {
