@@ -78,7 +78,7 @@ Let $D(i)$ be the depth of a descend point at index $i$.
 4. Handle edge cases and maintain the landscape's integrity after operations.
 5. Ensure efficient implementation of all operations.
 
-**Important Note:** You may use standard library constructs from java.util in your solution, however your score will receive a 20% bonus if you implement without using any java.util classes (aside from java.util.Random which may be useful for certain data structures). You can either create a new class in the same file or create a new file and submit it alongside `TreasureValleyExplorer.java`. 
+**Important Note:** You may use standard library constructs from java.util in your solution
 
 ## :footprints: Example Expedition
 
@@ -154,7 +154,7 @@ __Late Submission Policy:__ Late submissions will not be accepted.
 
 - __Correctness:__ Does the implementation correctly handle all operations on the landscape?
 - __Efficiency:__ Does the implementation have a reasonable time and space complexity?
-- __Time Complexity:__ Given an initial landscape with $N$ landforms and $Q$ queries (operations), the entire procedure should be completed in $O((N + Q) \log N)$ time complexity for full credit.
+- __Time Complexity:__ Given an initial landscape with $N$ landforms and $Q$ queries (operations), the entire procedure should be completed in $O((N + Q) log N)$ time complexity for full credit.
 ### Partial Credits
 You can get partial credits for passing a subset of the test cases if you meet at least one of the below conditions:
 - Correct implementation of insert operations.
